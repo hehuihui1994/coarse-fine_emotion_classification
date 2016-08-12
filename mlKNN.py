@@ -63,6 +63,7 @@ def find_neighbor(test_weight,train_vec,k,train_test_flag,train_label,emotion_nu
 def map(k,train_label, train_vec,emotion_num):
     #1从训练集中计算先验概率PH[emotion][1]
     #m为训练样本数量
+    print(u"先验概率计算..")
     m=len(train_label)
     #平滑
     s=1
@@ -78,6 +79,7 @@ def map(k,train_label, train_vec,emotion_num):
         ph[j][1] = (s + sum_y[j])*1.0/(s*2+m)
         ph[j][0]=1-ph[j][1]
 
+    print(u"后验概率计算..")
     #2从训练集中计算后验概率
     #为训练集中的每一条微博计算它的K近邻
     dic_train_neighbor={}
@@ -99,7 +101,7 @@ def map(k,train_label, train_vec,emotion_num):
              temp=dic_train_neighbor[i][j]
              if train_label[i][j] == 1:
                 c1[temp] += 1
-            else:
+             else:
                 c2[temp]=c2[temp]+1
          sum_c1=0
          sum_c2=0
@@ -120,10 +122,13 @@ def predict_test(test_weight,k,train_vec,ph,pe1,pe0,train_label,emotion_num):
     neighbor_emotion_num=find_neighbor(test_weight,train_vec,k,1,train_label,emotion_num)
     #测试样本对于每个表情的判断[1,0,1,0,1...]
     temp_first=[]
+    #temp_outputs 为f(xi,y)
+    temp_outputs = []
     for j in range(emotion_num):
         up=ph[j][1]*pe1[j][neighbor_emotion_num[j]]
         down=ph[j][1]*pe1[j][neighbor_emotion_num[j]] + ph[j][0]*pe0[j][neighbor_emotion_num[j]]
         r[j]=up*1.0/down
+        temp_outputs.append(r[j])
         #输出为向量
         if r[j]>0.5:
             temp_first.append(1)
@@ -134,17 +139,20 @@ def predict_test(test_weight,k,train_vec,ph,pe1,pe0,train_label,emotion_num):
     #     #r[i]最大，则输出类别标签为i
     #     if r[i]==rtemp[emotion_num-1]
     #         test_emotion_temp=i
-    return temp_first
+    return temp_first,temp_outputs
 
 #输入train_vec,train_label,test_vec,emotion_num,k
 #对于每一个测试样本输出test_label [1,0,1,0]
 def mlknn_demo(train_vec,train_label,test_vec,emotion_num,k):
     ph,pe1,pe0 = map(k,train_label, train_vec,emotion_num)
     test_label = []
+    outputs = []
+    print(u"预测测试集..")
     for test_weight in test_vec:
-        temp_first = predict_test(test_weight,k,train_vec,ph,pe1,pe0,train_label,emotion_num)
+        temp_first, temp_outputs = predict_test(test_weight,k,train_vec,ph,pe1,pe0,train_label,emotion_num)
         test_label.append(temp_first)
-    return test_label
+        outputs.append(temp_outputs)
+    return test_label, outputs
 
 
 if __name__ == '__main__':

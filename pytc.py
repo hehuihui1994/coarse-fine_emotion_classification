@@ -898,13 +898,36 @@ def demo():
         fname_output_nb)
     print '\nFianl accuracy:', acc_nb
 
-def demo_hhh():
-    #读train的文件夹
-    print '读文本...'
+#文本和情绪类别在两个文件中
+def read_text_f_hhh(file_text,file_class):
+    #文本
+    doc_str_list = []
+    f_text = open(file_text,'r')
+    for line in f_text.readlines():
+        doc_str_list.append(line.strip())
+    #主要情绪类别
+    doc_class_list = []
+    f_class = open(file_class,'r')
+    index = 0
+    for line in f_class.readlines():
+        lineSet = line.strip().split()
+        doc_class_list.append(lineSet[3])
+    return doc_str_list, doc_class_list 
+
+
+#多类别
+def demo_m_hhh():
+    print u'读训练集、测试集...'
+    #加上主要情绪类别，以便观察
     #训练集
-    doc_str_list_train, doc_class_list_train=read_text_f1('corpus\\sentence_train')
+    file_train_text = "corpus/sentence_train_quzao.txt_fenci"
+    file_train_class = "corpus/sentence_train_label.txt"
+    doc_str_list_train, doc_class_list_train = read_text_f_hhh(file_train_text,file_train_class)
     #测试集
-    doc_str_list_test, doc_class_list_test = read_text_f3('corpus\\label_sentence_test_quzao.txt_fenci')
+    file_test_text = "corpus/sentence_test_quzao.txt_fenci"
+    file_test_class = "corpus/sentence_test_label.txt"
+    doc_str_list_test, doc_class_list_test = read_text_f_hhh(file_test_text,file_test_class)
+    #处理
     doc_terms_list_train=get_doc_terms_list(doc_str_list_train)
     doc_terms_list_test =get_doc_terms_list(doc_str_list_test)
     class_set = get_class_set(doc_class_list_train)
@@ -914,12 +937,12 @@ def demo_hhh():
         print string
     term_set = get_term_set(doc_terms_list_train)
 
-    print '特征过滤 (DF>=4)...'
+    print u'特征过滤 (DF>=4)...'
     term_df = stat_df_term(term_set, doc_terms_list_train)
     term_set_df = feature_selection_df(term_df, 4)
     term_set = term_set_df
 
-    print '特征选择 卡方...'
+    print u'特征选择 卡方...'
     df_class = stat_df_class(class_set, doc_class_list_train)
     df_term_class = stat_df_term_class(term_set, class_set, \
         doc_terms_list_train, doc_class_list_train)
@@ -929,25 +952,24 @@ def demo_hhh():
     term_set_fs, term_score_dict = supervised_feature_selection(df_class, \
         df_term_class, fs_method, fs_num)
     term_set = term_set_fs
+    len_term_set = len(term_set)
+    print(u"特征个数：%r"%(len_term_set))
 
-    print '文本表示为向量 BOOL...'
-    term_dict = dict(zip(term_set, range(1, len(term_set)+1)))
-    class_dict = dict(zip(class_set, range(1, 1+len(class_set))))
-    #samp_list_train
-    term_weight = 'BOOL'
-    samp_list_train, class_list_train = build_samps(term_dict, class_dict, \
-        doc_terms_list_train, doc_class_list_train, term_weight)
-    samp_list_test, class_list_test = build_samps(term_dict, class_dict, \
-        doc_terms_list_test, doc_class_list_test, term_weight)
+    # print u'文本表示为向量 BOOL...'
+    # term_dict = dict(zip(term_set, range(1, len(term_set)+1)))
+    # class_dict = dict(zip(class_set, range(1, 1+len(class_set))))
+    # #samp_list_train
+    # term_weight = 'BOOL'
+    # samp_list_train, class_list_train = build_samps(term_dict, class_dict, \
+    #     doc_terms_list_train, doc_class_list_train, term_weight)
+    # samp_list_test, class_list_test = build_samps(term_dict, class_dict, \
+    #     doc_terms_list_test, doc_class_list_test, term_weight)
 
-
-    #将向量输出
-    save_samps(samp_list_train, class_list_train, 'temporary\\train.sample')
-    save_samps(samp_list_test, class_list_test, 'temporary\\test.sample')
+    # #将向量输出
+    # save_samps(samp_list_train, class_list_train, 'temporary\\train.sample')
+    # save_samps(samp_list_test, class_list_test, 'temporary\\test.sample')
+    return len_term_set
 
 
 if __name__ == '__main__':
-    demo()
-
-
-    
+    demo()   
