@@ -81,15 +81,17 @@ def map(k,train_label, train_vec,emotion_num):
 
     print(u"后验概率计算..")
     #2从训练集中计算后验概率
-    #为训练集中的每一条微博计算它的K近邻
+    print(u"为训练集中的每一条微博计算它的K近邻")
     dic_train_neighbor={}
     #dic_train_neighbor[0] 第0个样本的邻居的标签集[2,3,0,3,...]
     index=0
     for train_weight in train_vec:
         neighbor_emotion_num=find_neighbor(train_weight,train_vec,k,0,train_label,emotion_num)
         dic_train_neighbor[index]=neighbor_emotion_num
+        # print(u"正在寻找第 %r 个训练集样本的k近邻"%(index))
         index=index+1
     #对于每种情绪，计算出后验概率p(e[emotion][j]|h[emotion][1]),   p(e[emotion][j]|h[emotion][0])
+    print(u"对于每种情绪，计算出后验概率")
     pe1=[[0 for col in range(k+1)] for row in range(emotion_num)]
     pe0=[[0 for col in range(k+1)] for row in range(emotion_num)]
     for j in range(emotion_num):
@@ -124,9 +126,15 @@ def predict_test(test_weight,k,train_vec,ph,pe1,pe0,train_label,emotion_num):
     temp_first=[]
     #temp_outputs 为f(xi,y)
     temp_outputs = []
+    #temp_mlknn_p1   各种类别被判定为1的概率 [0.1,0.3,...]  temp_mlknn_p0
+    temp_mlknn_p1 = []
+    temp_mlknn_p0 = []
     for j in range(emotion_num):
         up=ph[j][1]*pe1[j][neighbor_emotion_num[j]]
-        down=ph[j][1]*pe1[j][neighbor_emotion_num[j]] + ph[j][0]*pe0[j][neighbor_emotion_num[j]]
+        temp_mlknn_p1.append(up)
+        up0 =  ph[j][0]*pe0[j][neighbor_emotion_num[j]]
+        temp_mlknn_p0.append(up0)
+        down = up + up0
         r[j]=up*1.0/down
         temp_outputs.append(r[j])
         #输出为向量
@@ -139,7 +147,7 @@ def predict_test(test_weight,k,train_vec,ph,pe1,pe0,train_label,emotion_num):
     #     #r[i]最大，则输出类别标签为i
     #     if r[i]==rtemp[emotion_num-1]
     #         test_emotion_temp=i
-    return temp_first,temp_outputs
+    return temp_first,temp_outputs,temp_mlknn_p1,temp_mlknn_p0
 
 #输入train_vec,train_label,test_vec,emotion_num,k
 #对于每一个测试样本输出test_label [1,0,1,0]
@@ -147,12 +155,18 @@ def mlknn_demo(train_vec,train_label,test_vec,emotion_num,k):
     ph,pe1,pe0 = map(k,train_label, train_vec,emotion_num)
     test_label = []
     outputs = []
-    print(u"预测测试集..")
+    mlknn_p1 = []
+    mlknn_p0 = []
+    # print(u"预测测试集..")
+    index = 0
     for test_weight in test_vec:
-        temp_first, temp_outputs = predict_test(test_weight,k,train_vec,ph,pe1,pe0,train_label,emotion_num)
+        index += 1
+        temp_first, temp_outputs, temp_mlknn_p1, temp_mlknn_p0 = predict_test(test_weight,k,train_vec,ph,pe1,pe0,train_label,emotion_num)
         test_label.append(temp_first)
         outputs.append(temp_outputs)
-    return test_label, outputs
+        mlknn_p1.append(temp_mlknn_p1)
+        mlknn_p0.append(temp_mlknn_p0)
+    return test_label, outputs, mlknn_p1, mlknn_p0
 
 
 if __name__ == '__main__':
