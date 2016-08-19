@@ -20,7 +20,7 @@
   计算评估指标Hamming_Loss、One_error、Coverage、RankingLoss、Average_Precision。
 
 * mlKNN.py<br>
-  [mlknn算法](http://blog.csdn.net/hayigeqiu/article/details/51791794)
+  [mlknn算法](https://hehuihui1994.github.io/hehuihui1994.github.io/2016/08/15/ML-KNN/#more)
 
 * performance.py<br>
   performance库,多种常用的评估指标如acc、precision、recall等。
